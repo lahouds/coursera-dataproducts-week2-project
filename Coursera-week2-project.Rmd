@@ -1,0 +1,91 @@
+---
+title: "DataProject_Week2_Project"
+author: "Charbel Lahoud"
+date: "9/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## List of Fire Stations in Dubai, UAE
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(jsonlite)
+library(httr)
+library(dplyr)
+library(leaflet)
+
+## URL for Dubai open data platform
+root_api <- "http://data.bayanat.ae"
+path_fire_stations <- "/api/action/datastore_search?resource_id=c877382c-a545-482a-9cf4-72f8bb033542"
+
+## Retreiving the list of Fire Stations by API
+raw.result <- GET(url = root_api, path = path_fire_stations)
+content <- fromJSON(rawToChar(raw.result$content))
+data_fire_stations <- content$result$records %>% 
+     select(Fire_station_Name,Longitude, Latitude) %>% 
+     mutate(Latitude = as.numeric(Latitude)) %>%
+     mutate(Longitude = as.numeric(Longitude)) %>%
+     rename(lat = Latitude) %>%
+     rename(lng = Longitude) %>%
+     rename(name = Fire_station_Name)
+
+## Creating a cool icon for the map
+myIcon <- makeIcon(
+     iconUrl = "https://icon-library.net/images/firetruck-icon/firetruck-icon-5.jpg",
+     iconWidth = 31*215/230, iconHeight = 31,
+     iconAnchorX = 31*215/230/2, iconAnchorY = 16
+)
+
+## Plotting all fire stations on a map
+data_fire_stations %>% 
+     leaflet() %>%
+     addTiles() %>%
+     addMarkers(
+          popup = data_fire_stations$name, 
+          lat = data_fire_stations$lat, 
+          lng = data_fire_stations$lng,
+          icon = myIcon
+     )
+```
+
+Here's the source code I used to create the above interactive map
+
+```{r eval=FALSE}
+## URL for Dubai open data platform
+root_api <- "http://data.bayanat.ae"
+path_fire_stations <- "/api/action/datastore_search?resource_id=c877382c-a545-482a-9cf4-72f8bb033542"
+
+## Retreiving the list of Fire Stations by API
+raw.result <- GET(url = root_api, path = path_fire_stations)
+content <- fromJSON(rawToChar(raw.result$content))
+data_fire_stations <- content$result$records %>% 
+     select(Fire_station_Name,Longitude, Latitude) %>% 
+     mutate(Latitude = as.numeric(Latitude)) %>%
+     mutate(Longitude = as.numeric(Longitude)) %>%
+     rename(lat = Latitude) %>%
+     rename(lng = Longitude) %>%
+     rename(name = Fire_station_Name)
+
+## Creating a cool icon for the map
+myIcon <- makeIcon(
+     iconUrl = "https://icon-library.net/images/firetruck-icon/firetruck-icon-5.jpg",
+     iconWidth = 31*215/230, iconHeight = 31,
+     iconAnchorX = 31*215/230/2, iconAnchorY = 16
+)
+
+## Plotting all fire stations on a map
+data_fire_stations %>% 
+     leaflet() %>%
+     addTiles() %>%
+     addMarkers(
+          popup = data_fire_stations$name, 
+          lat = data_fire_stations$lat, 
+          lng = data_fire_stations$lng,
+          icon = myIcon
+     )
+```
+
